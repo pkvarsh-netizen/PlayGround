@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#120b18" />
+  <meta name="description" content="Sunset City — an open-world crime sandbox in your browser. Steal cars, run jobs, outrun the police." />
+  <title>SUNSET CITY — open-world crime sandbox</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23120b18'/%3E%3Cpath d='M10 44h44M16 44V26l16-10 16 10v18' stroke='%23ffcf5c' stroke-width='5' fill='none'/%3E%3Ccircle cx='48' cy='16' r='7' fill='%23ff5f7a'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./styles.css" />
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.js" } }
+  </script>
+</head>
+<body>
+  <canvas id="game" aria-label="Sunset City game"></canvas>
+
+  <div id="vignette"></div>
+  <div id="grain"></div>
+  <div id="damage-flash"></div>
+  <div id="low-health"></div>
+
+  <!-- ============================================================ HUD ==== -->
+  <div id="hud" aria-live="polite">
+    <div id="brandbar">
+      <div class="brand">SUNSET<span>CITY</span></div>
+      <div class="clock-row">
+        <span id="clock">6:30 PM</span>
+        <span class="sep"></span>
+        <span id="radio">NOW PLAYING · <b id="radio-name">SUNSET FM 89.1</b></span>
+      </div>
+    </div>
+
+    <div id="mission-panel">
+      <div class="mission-label"><i></i> CURRENT JOB <span id="mission-timer"></span></div>
+      <div id="mission-title">COURIER</div>
+      <div id="mission-desc">Deliver the package · 1/3</div>
+      <div id="mission-dist">80 M</div>
+    </div>
+
+    <div id="top-right">
+      <div id="cash">$750</div>
+      <div id="wanted-label"></div>
+      <div id="wanted" aria-label="wanted level">
+        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+      </div>
+      <button id="sound-btn" aria-label="Mute audio" title="Sound on/off">♪</button>
+    </div>
+
+    <div id="minimap-wrap">
+      <canvas id="minimap" width="220" height="220"></canvas>
+      <div class="map-ring"></div>
+      <div class="map-label">SUNSET CITY</div>
+    </div>
+
+    <div id="vitals">
+      <div class="vital">
+        <span class="v-label">HEALTH</span>
+        <div class="v-bar"><div id="health-fill"></div></div>
+      </div>
+      <div class="vital">
+        <span class="v-label">ARMOR</span>
+        <div class="v-bar armor"><div id="armor-fill"></div></div>
+      </div>
+    </div>
+
+    <div id="speedo">
+      <div class="speed-num"><span id="speed-value">0</span><small>MPH</small></div>
+      <div id="car-name">SABRE TURBO</div>
+    </div>
+
+    <div id="toasts"></div>
+    <div id="crosshair"><span></span></div>
+    <div id="prompt"></div>
+  </div>
+
+  <!-- ====================================================== TOUCH UI ===== -->
+  <div id="touch-controls">
+    <div id="joystick"><div id="joystick-knob"></div></div>
+    <div id="touch-buttons">
+      <button id="btn-jump" class="tbtn small">JUMP</button>
+      <button id="btn-fire" class="tbtn fire">FIRE</button>
+      <button id="btn-sprint" class="tbtn small">RUN</button>
+      <button id="btn-brake" class="tbtn brake">BRAKE</button>
+      <button id="btn-action" class="tbtn action">ENTER / EXIT</button>
+    </div>
+  </div>
+
+  <!-- ==================================================== START SCREEN === -->
+  <div id="start-screen">
+    <div class="sun-disc"></div>
+    <div class="start-top">
+      <div class="pres">OMG PLAYGROUND PRESENTS</div>
+      <div class="rating">18+ · FICTIONAL CITY · PROCEDURAL WORLD</div>
+    </div>
+
+    <div class="start-main">
+      <div class="eyebrow"><span></span> AN OPEN-WORLD CRIME SAGA <span></span></div>
+      <h1 class="logo"><span class="sunset">SUNSET</span><span class="city">CITY</span></h1>
+      <p class="tagline">Steal the streets. Run the jobs. Outrun the heat.</p>
+
+      <div class="chips">
+        <span>OPEN WORLD</span>
+        <span>DRIVE ANYTHING</span>
+        <span>5-STAR WANTED</span>
+        <span>JOBS &amp; CASH</span>
+      </div>
+
+      <div class="start-actions">
+        <button id="start-btn" type="button">START GAME</button>
+        <div class="hint"><span class="desktop-hint">WASD TO MOVE · CLICK TO LOOK · F TO STEAL A CAR</span><span class="touch-hint">LEFT STICK MOVES · DRAG TO LOOK · TAP ENTER TO STEAL</span></div>
+      </div>
+
+      <div class="start-bottom">
+        <div class="control-card">
+          <div class="card-title">CONTROLS</div>
+          <div class="keys">
+            <div><kbd>W A S D</kbd><span>Move / drive</span></div>
+            <div><kbd>MOUSE</kbd><span>Look / aim</span></div>
+            <div><kbd>F</kbd><span>Enter / exit car</span></div>
+            <div><kbd>SPACE</kbd><span>Jump / handbrake</span></div>
+            <div><kbd>SHIFT</kbd><span>Sprint</span></div>
+            <div><kbd>M</kbd><span>District map</span></div>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="card-title">TONIGHT IN THE CITY</div>
+          <p>Take courier runs and repo jobs for cash. Buy nothing. Steal everything. Keep an eye on the five stars — the LSPD responds fast.</p>
+          <div class="feature-row"><span>◈</span> Procedural skyline, sunset to neon night</div>
+          <div class="feature-row"><span>◈</span> Traffic, pedestrians, sirens and radio</div>
+          <div class="feature-row"><span>◈</span> Keyboard, mouse and full touch controls</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="start-footer">
+      <span>SUNSET CITY · BUILD 1.0</span>
+      <span>HEADPHONES RECOMMENDED</span>
+      <span>TOUCH DEVICES SUPPORTED</span>
+    </div>
+    <div id="error-box"></div>
+  </div>
+
+  <!-- ========================================================= PAUSE ==== -->
+  <div id="pause-screen">
+    <div class="pause-card">
+      <div class="eyebrow"><span></span> GAME PAUSED <span></span></div>
+      <h2>PAUSED</h2>
+      <button id="resume-btn" class="primary" type="button">RESUME</button>
+      <button id="pause-map-btn" type="button">VIEW DISTRICT MAP</button>
+      <button id="pause-sound-btn" type="button"><span id="sound-label">SOUND ON</span></button>
+      <button id="pause-restart-btn" class="ghost" type="button">RESTART CITY</button>
+      <div class="pause-help"><span class="desktop-hint">ESC TO RESUME · M FOR MAP · F TO ENTER VEHICLES</span><span class="touch-hint">TAP RESUME · TAP MAP FOR JOBS</span></div>
+    </div>
+  </div>
+
+  <!-- ========================================================== MAP ===== -->
+  <div id="bigmap">
+    <div class="map-frame">
+      <div class="map-head">
+        <span>DISTRICT MAP</span>
+        <button id="map-close" type="button">CLOSE</button>
+      </div>
+      <canvas id="bigmap-canvas" width="760" height="760"></canvas>
+      <div class="map-foot">GOLD · ACTIVE JOB &nbsp;|&nbsp; GREEN · JOB OFFER &nbsp;|&nbsp; RED · POLICE</div>
+    </div>
+  </div>
+
+  <!-- ======================================================= WASTED ===== -->
+  <div id="wasted">
+    <h2>WASTED</h2>
+    <p>The city always wins. Respawning at the hospital…</p>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
