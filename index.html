@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0712">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b0712'/%3E%3Cpath d='M12 44c8-16 14-24 20-24s12 8 20 24' stroke='%23ffce4d' stroke-width='6' fill='none'/%3E%3C/svg%3E">
+<title>Sunset City — A Neon Crime Sandbox</title>
+<link rel="stylesheet" href="./style.css">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="objective">
+    <div class="obj-kicker">CURRENT JOB</div>
+    <div id="obj-title">FREE ROAM</div>
+    <div id="obj-text">Explore Sunset City.</div>
+    <div class="obj-meta"><span id="obj-dist"></span><span id="obj-timer"></span></div>
+  </div>
+
+  <div id="status">
+    <div id="stars" aria-label="Wanted level">
+      <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+    </div>
+    <div id="money">$750</div>
+    <div id="locrow"><span id="location">Downtown</span><span id="clock">18:33</span></div>
+  </div>
+
+  <div id="bottom-left">
+    <div id="bars">
+      <div class="bar health"><div id="health-fill"></div></div>
+      <div class="bar armor"><div id="armor-fill"></div></div>
+    </div>
+    <div id="minimap-wrap">
+      <canvas id="minimap"></canvas>
+      <div id="map-label">SUNSET CITY</div>
+    </div>
+  </div>
+
+  <div id="bottom-right">
+    <div id="speedo" class="hidden">
+      <div class="speed-main"><span id="speed-value">0</span><span class="speed-unit">KM/H</span></div>
+      <div class="speed-gear"><span id="gear">D</span></div>
+    </div>
+    <div id="weapon">
+      <div class="weapon-row">
+        <div class="weapon-icon"></div>
+        <div>
+          <div id="weapon-name">PISTOL</div>
+          <div id="ammo">12 / 84</div>
+        </div>
+      </div>
+      <div id="reload-bar"><div id="reload-fill"></div></div>
+    </div>
+  </div>
+
+  <div id="crosshair">
+    <span class="ch top"></span><span class="ch bottom"></span>
+    <span class="ch left"></span><span class="ch right"></span>
+    <span class="dot"></span>
+  </div>
+  <div id="hitmarker"><span></span><span></span><span></span><span></span></div>
+  <div id="prompt" class="hidden"></div>
+  <div id="toasts"></div>
+
+  <div id="mission-banner" class="hidden">
+    <div id="banner-title">MISSION PASSED</div>
+    <div id="banner-sub"></div>
+  </div>
+
+  <div id="damage-flash"></div>
+  <div id="vignette"></div>
+
+  <div id="wasted" class="hidden">
+    <div id="wasted-title">WASTED</div>
+    <div id="wasted-sub">Sunset City Medical has been notified</div>
+  </div>
+
+  <button id="pause-btn" aria-label="Pause game">❚❚</button>
+</div>
+
+<div id="mobile-controls">
+  <div id="stick-base"><div id="stick-knob"></div></div>
+  <div id="touch-buttons">
+    <button data-action="sprint" class="touch small">RUN</button>
+    <button data-action="enter" class="touch small">E</button>
+    <button data-action="jump" class="touch small">↑</button>
+    <button data-action="aim" class="touch aim">AIM</button>
+    <button data-action="fire" class="touch fire">●</button>
+  </div>
+</div>
+
+<div id="start-screen">
+  <div class="start-glow"></div>
+  <header class="start-top">
+    <div class="brand">OM<span>G</span> / ORIGINAL BROWSER GAME</div>
+    <div class="status-pill"><i></i> OPEN WORLD · LIVE</div>
+  </header>
+
+  <div class="start-main">
+    <div class="eyebrow">WELCOME TO</div>
+    <h1 class="logo"><span class="logo-sunset">SUNSET</span><span class="logo-city">CITY</span></h1>
+    <p class="tagline">A neon crime sandbox. Steal the city. Outrun the heat. Watch the sun go down.</p>
+    <div class="start-actions">
+      <button id="play-btn">Play Game</button>
+      <div class="start-note">No downloads. No installs. One city.</div>
+    </div>
+  </div>
+
+  <div class="start-bottom">
+    <div class="control-grid">
+      <div class="control"><kbd>W A S D</kbd><span>Move / drive</span></div>
+      <div class="control"><kbd>Mouse</kbd><span>Look / aim</span></div>
+      <div class="control"><kbd>Click</kbd><span>Fire</span></div>
+      <div class="control"><kbd>E</kbd><span>Enter / exit vehicle</span></div>
+      <div class="control"><kbd>Shift</kbd><span>Sprint</span></div>
+      <div class="control"><kbd>Space</kbd><span>Jump / handbrake</span></div>
+    </div>
+    <div class="start-meta">
+      <span>THREE.JS</span><span>·</span><span>PROCEDURAL CITY</span><span>·</span><span>SYNTHESIZED AUDIO</span>
+    </div>
+  </div>
+</div>
+
+<div id="pause-screen" class="hidden">
+  <div class="pause-card">
+    <div class="pause-kicker">GAME PAUSED</div>
+    <h2>Sunset City</h2>
+    <p>The city can wait.</p>
+    <button id="resume-btn">Resume</button>
+    <button id="restart-btn" class="ghost">Restart</button>
+    <div class="pause-tip">Tip: hold <b>Shift</b> to sprint, <b>Space</b> to handbrake, and lose the cops by breaking line of sight.</div>
+  </div>
+</div>
+
+<div id="fatal"></div>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
